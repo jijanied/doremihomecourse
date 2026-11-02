@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Doremi – Portal Guru & Admin</title>
+<style>
+:root{--ac:#ea580c;--bg:#f5f6fa;--bd:#dfe2ea;--tx:#1f2430;--mu:#6b7280}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+.box{max-width:360px;margin:8vh auto;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:22px}
+.box h1{margin:0 0 4px;font-size:1.2rem;color:var(--ac)}.box p{margin:0 0 14px;color:var(--mu);font-size:.85rem}
+label{display:block;font-size:.8rem;color:var(--mu);margin:10px 0 3px}
+input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;font:inherit}
+.btn{width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-weight:600;font-size:1rem;cursor:pointer}
+.err{color:#b91c1c;font-size:.85rem;margin-top:10px;min-height:1em}
+#app{display:none;height:100%;flex-direction:column}
+header{background:var(--ac);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+header b{font-size:1rem}header span{font-size:.8rem;opacity:.9}header button{background:#fff3;border:0;color:#fff;padding:7px 12px;border-radius:8px;cursor:pointer;margin-left:8px}
+.wrap{flex:1;display:flex;min-height:0}
+nav{width:220px;background:#fff;border-right:1px solid var(--bd);padding:10px;overflow:auto}
+nav h4{margin:12px 6px 4px;font-size:.72rem;color:var(--mu);text-transform:uppercase}
+nav button{display:block;width:100%;text-align:left;padding:10px;border:0;background:none;border-radius:8px;font:inherit;cursor:pointer;color:var(--tx)}
+nav button.on{background:#ffedd5;color:#c2410c;font-weight:600}nav button small{color:var(--mu);font-weight:400}
+main{flex:1;min-width:0;display:flex}iframe{flex:1;border:0;width:100%}
+.soon{margin:30px auto;text-align:center;color:var(--mu)}
+.pad{padding:18px;overflow:auto;width:100%}.pad table{border-collapse:collapse;width:100%;max-width:640px;margin-top:12px;background:#fff}.pad td,.pad th{border:1px solid var(--bd);padding:8px;text-align:left;font-size:.9rem}.pad th{background:#ffedd5}.sm{width:auto;margin:0;padding:7px 12px;font-size:.85rem}.ok{background:#ecfdf5;border:1px solid #6ee7b7;padding:10px;border-radius:8px;margin-bottom:10px}.arm{background:#b91c1c!important}
+@media(max-width:700px){.wrap{flex-direction:column}nav{width:100%;display:flex;gap:6px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--bd)}nav h4{display:none}nav button{white-space:nowrap;width:auto}}
+</style></head><body>
+<div id="login" class="box"><h1>DOREMI Home Music Course</h1><p>Masuk sebagai guru atau admin</p>
+<label>Nama</label><input id="nama" autocomplete="username"><label>Password</label><input id="pw" type="password" autocomplete="current-password">
+<label style="display:flex;gap:6px;align-items:center;margin-top:12px"><input id="rem" type="checkbox" checked style="width:auto"> Ingat saya di perangkat ini (30 hari)</label><button class="btn" id="bLogin">Masuk</button><div class="err" id="eLogin"></div></div>
+<div id="chg" class="box" style="display:none"><h1>Buat password baru</h1><p>Password sementara harus diganti sebelum lanjut.</p>
+<label>Password baru (min. 6 karakter)</label><input id="p1" type="password"><label>Ulangi password baru</label><input id="p2" type="password">
+<button class="btn" id="bChg">Simpan</button><div class="err" id="eChg"></div></div>
+<div id="app"><header><b>DOREMI</b><div><span id="who"></span><button id="bOut">Keluar</button></div></header>
+<div class="wrap"><nav id="nav"></nav><main id="main"></main></div></div>
+<script>
+const API=''; // tempel URL Web App Apps Script (berakhiran /exec) di sini
+const $=i=>document.getElementById(i),get=k=>sessionStorage.getItem(k)||localStorage.getItem(k),put=(k,v)=>(localStorage.getItem('t')?localStorage:sessionStorage).setItem(k,v);
+const GURU=[['absen','Absensi'],['rabsen','Riwayat Absensi'],['jadwal','Jadwal Saya'],['izin','Izin & Pengganti'],['rapor','Penilaian / Rapor'],['rrapor','Riwayat Rapor'],['gaji','Gaji Saya']];
+const ADM=[['pgaji','Pergajian'],['jkosong','Jadwal Guru & Jam Kosong'],['akun','Kelola Akun']];
+const READY=['rapor','akun'];
+let U=null;
+async function api(a){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...a,token:get('t')})});return r.json()}
+function view(n){['login','chg'].forEach(x=>$(x).style.display=x==n?'block':'none');$('app').style.display=n=='app'?'flex':'none'}
+function menu(){const g=U.role=='guru'||U.isGuru,a=U.role=='admin';let h='';
+ if(g)h+='<h4>Menu Guru</h4>'+GURU.map(m=>btn(m)).join('');
+ if(a)h+='<h4>Menu Admin</h4>'+(g?'':btn(['rapor','Penilaian / Rapor']))+ADM.map(m=>btn(m)).join('');
+ $('nav').innerHTML=h;$('who').textContent=U.nama+' · '+(a?'Admin':'Guru');go(g?'absen':(a?'pgaji':'rapor'))}
+const btn=m=>'<button data-id="'+m[0]+'">'+m[1]+(READY.includes(m[0])?'':' <small>(segera)</small>')+'</button>';
+function go(id){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.id==id));
+ const t=document.querySelector('nav button[data-id="'+id+'"]');
+ if(id=='akun'){akunView();return}
+ $('main').innerHTML=id=='rapor'?'<iframe src="rapor-doremi.html"></iframe>':'<div class="soon"><h2>'+(t?t.firstChild.textContent:'')+'</h2><p>Menu ini sedang disiapkan.</p></div>'}
+$('nav').onclick=e=>{const b=e.target.closest('button');if(b)go(b.dataset.id)};
+function enter(r){sessionStorage.clear();localStorage.clear();const st=$('rem').checked?localStorage:sessionStorage;st.setItem('t',r.token);st.setItem('api',API);st.setItem('u',JSON.stringify(r.user));U=r.user;if(U.ganti)view('chg');else{view('app');menu()}}
+$('bLogin').onclick=async()=>{$('eLogin').textContent='';if(!API){$('eLogin').textContent='API belum diisi di index.html';return}
+ $('bLogin').disabled=true;try{const r=await api({action:'login',nama:$('nama').value,password:$('pw').value});if(r.error)$('eLogin').textContent=r.error;else enter(r)}catch(e){$('eLogin').textContent='Gagal terhubung: '+e.message}$('bLogin').disabled=false};
+$('pw').onkeydown=e=>{if(e.key=='Enter')$('bLogin').click()};
+$('bChg').onclick=async()=>{if($('p1').value!=$('p2').value){$('eChg').textContent='Password tidak sama';return}
+ const r=await api({action:'chpw',baru:$('p1').value});if(r.error){$('eChg').textContent=r.error;return}U.ganti=false;put('t',r.token);put('u',JSON.stringify(U));view('app');menu()};
+$('bOut').onclick=()=>{sessionStorage.clear();localStorage.clear();location.reload()};
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function akunView(){$('main').innerHTML='<div class="pad"><h2>Kelola Akun</h2><div id="akMsg"></div><button class="btn sm" id="bSync">Sinkronkan guru baru</button><div id="akList">Memuat…</div></div>';
+ $('bSync').onclick=async()=>{$('bSync').disabled=true;akunRender(await api({action:'sinkron'}));$('bSync').disabled=false};
+ $('akList').onclick=akunClick;akunRender(await api({action:'akun'}))}
+function akunRender(r){if(r.error){$('akList').textContent=r.error;return}
+ $('akList').innerHTML='<table><tr><th>Nama</th><th>Peran</th><th>Status</th><th></th></tr>'+r.map(a=>'<tr><td>'+esc(a.nama)+'</td><td>'+esc(a.role)+'</td><td>'+(a.belumGanti?'Belum ganti password':'Aktif')+'</td><td><button class="btn sm" data-n="'+esc(a.nama)+'">Reset password</button></td></tr>').join('')+'</table>'}
+async function akunClick(e){const b=e.target.closest('button[data-n]');if(!b)return;
+ if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Yakin? Klik lagi';setTimeout(()=>{b.classList.remove('arm');b.textContent='Reset password'},4000);return}
+ b.disabled=true;const r=await api({action:'resetPw',nama:b.dataset.n});
+ $('akMsg').innerHTML=r.error?'<div class="err">'+esc(r.error)+'</div>':'<div class="ok">Password sementara untuk <b>'+esc(r.nama)+'</b>: <b style="font-size:1.1rem;letter-spacing:1px">'+esc(r.pw)+'</b><br><small>Berikan ke yang bersangkutan. Ia wajib menggantinya saat login.</small></div>';
+ akunRender(await api({action:'akun'}))}
+(async()=>{if(!get('t')||!API){view('login');return}
+ try{const r=await api({action:'me'});if(r.error){sessionStorage.clear();localStorage.clear();view('login');return}U=r.user;put('u',JSON.stringify(U));if(U.ganti)view('chg');else{view('app');menu()}}catch(e){view('login')}})();
+</script></body></html>
