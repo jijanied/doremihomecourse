@@ -32,7 +32,7 @@ main{flex:1;min-width:0;display:flex}iframe{flex:1;border:0;width:100%}
 <div id="app"><header><b>DOREMI</b><div><span id="who"></span><button id="bOut">Keluar</button></div></header>
 <div class="wrap"><nav id="nav"></nav><main id="main"></main></div></div>
 <script>
-const API=''; // tempel URL Web App Apps Script (berakhiran /exec) di sini
+const API='https://script.google.com/macros/s/AKfycbxVekncuotYPQYURvoCNDT087J0LaKdcM3Hg2vLIe4Rk2RxJAKUzvk0Zn2j3iG90EXR/exec'; // tempel URL Web App Apps Script (berakhiran /exec) di sini
 const $=i=>document.getElementById(i),get=k=>sessionStorage.getItem(k)||localStorage.getItem(k),put=(k,v)=>(localStorage.getItem('t')?localStorage:sessionStorage).setItem(k,v);
 const GURU=[['absen','Absensi'],['rabsen','Riwayat Absensi'],['jadwal','Jadwal Saya'],['izin','Izin & Pengganti'],['rapor','Penilaian / Rapor'],['rrapor','Riwayat Rapor'],['gaji','Gaji Saya']];
 const ADM=[['pgaji','Pergajian'],['jkosong','Jadwal Guru & Jam Kosong'],['akun','Kelola Akun']];
